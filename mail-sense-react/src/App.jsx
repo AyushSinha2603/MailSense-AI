@@ -56,6 +56,9 @@ function App() {
                   <MenuItem value="professional">Professional</MenuItem>
                   <MenuItem value="casual">Casual</MenuItem>
                   <MenuItem value="friendly">Friendly</MenuItem>
+                  <MenuItem value="concise">Concise</MenuItem>
+                  <MenuItem value="emphathetic">Emphathetic</MenuItem>
+                  <MenuItem value="neutral">Neutral</MenuItem>
 
               </Select>
             </FormControl>
