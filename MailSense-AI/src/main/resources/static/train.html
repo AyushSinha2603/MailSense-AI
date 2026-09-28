@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MailSense — teach it your voice</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 16px; }
+        textarea { width: 100%; height: 340px; font-family: inherit; padding: 8px; box-sizing: border-box; }
+        button { padding: 8px 16px; margin-right: 8px; cursor: pointer; }
+        #status { margin-top: 12px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+<h2>Teach MailSense your writing style</h2>
+<p>Paste emails <b>you wrote</b> (your Sent folder). Put a line containing only <code>---</code> between emails.
+    Remove anything private (passwords, account numbers, other people's details) first.</p>
+<textarea id="emails" placeholder="Email 1...&#10;---&#10;Email 2...&#10;---&#10;Email 3..."></textarea>
+<p>
+    <button onclick="ingest()">Save my emails</button>
+    <button onclick="refresh()">Check count</button>
+    <button onclick="clearAll()">Delete all saved</button>
+</p>
+<div id="status"></div>
+<script>
+    const status = document.getElementById("status");
+    async function ingest() {
+        const emails = document.getElementById("emails").value
+            .split(/^\s*-{2,}\s*$/m)
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+        if (!emails.length) { status.textContent = "Nothing to save."; return; }
+        status.textContent = "Saving " + emails.length + " emails (this takes a moment)...";
+        try {
+            const res = await fetch("/api/style/ingest", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ emails })
+            });
+            const data = await res.json();
+            status.textContent = res.ok
+                ? `Added ${data.added}, skipped ${data.skipped}. Total saved: ${data.total}`
+                : "Error: " + (data.message || JSON.stringify(data));
+        } catch (e) { status.textContent = "Error: " + e.message; }
+    }
+    async function refresh() {
+        const data = await (await fetch("/api/style/count")).json();
+        status.textContent = "Total saved: " + data.total;
+    }
+    async function clearAll() {
+        if (!confirm("Delete all saved emails?")) return;
+        await fetch("/api/style", { method: "DELETE" });
+        refresh();
+    }
+    refresh();
+</script>
+</body>
+</html>
